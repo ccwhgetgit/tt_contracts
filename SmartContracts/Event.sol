@@ -1,3 +1,5 @@
+//Alchemy Key : https://polygon-mumbai.g.alchemy.com/v2/3oE8BGNsfXndWYJbZxEkLCsZZ6STLO2R 
+
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
@@ -19,7 +21,7 @@ Next steps:
 3. Update event listing and ticket details
 */
 
-contract Event is  Ownable, ReentrancyGuard, ERC721 {
+contract Event is  Ownable, ReentrancyGuard, ERC721URIStorage {
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
 
@@ -116,6 +118,24 @@ contract Event is  Ownable, ReentrancyGuard, ERC721 {
 
     } 
 
+
+    //for the tokenURI 
+    function _baseURI() internal pure override returns (string memory) {
+        return "https://example.com/nft/";
+    }
+
+    //return tokenURI  
+    //contract.tokenURI(id) => returns the baseURI + id => direct link to it 
+     function tokenURI(uint256 tokenId)
+        public
+        view
+        override(ERC721, ERC721URIStorage)
+        returns (string memory)
+    {
+        return super.tokenURI(tokenId);
+    }
+    
+
     function mint(string memory category) public virtual payable returns(uint256){
         require(ticketsPerOwner[msg.sender] < maxTicketsPerAddress, "Exceeded Max Minting");    
         require(idToCategoryDetails[category].currentSupply < idToCategoryDetails[category].maxNumber, "Exceeded Category minting");
@@ -129,14 +149,22 @@ contract Event is  Ownable, ReentrancyGuard, ERC721 {
 
         _tokenIds.increment();
         uint256 newItemId = _tokenIds.current();
-        
-        _mint(msg.sender, newItemId);
+        _safeMint(msg.sender, newItemId);
+        string ticketDetails = category; //just arbitary. needs a separate script to create the metadata to pin on ipfs
+        _setTokenURI(newItemId, ticketDetails); 
+
+
         ticketsPerOwner[msg.sender] += 1;
         ticketIDs[newItemId] = newTicket;
         currentTicketSupply += 1;
         emit ticketMinted(newItemId, msg.sender);
 
-        return newItemId; 
+        return newItemId;  //get the newItemId
+    }
+
+    function getTicketDetails(uint256 tokenId, string memory tokenURI) public view returns(Ticket ticket){ 
+        return ticketIDs[tokenId]
+
     }
 
     function getCategoryInformation(string memory category) public view returns (uint256 _price, uint256 _maxNumber, uint256 _currentSupply){

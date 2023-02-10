@@ -16,7 +16,6 @@ contract marketplace is ReentrancyGuard {
     }
 
     mapping(address => mapping(uint256 => MarketItem)) private listings;
-    mapping(address => uint256) private s_proceeds; //replace this to just send money over 
 
 
     modifier isOwner(address ticketAddress, uint256 tokenId) {
