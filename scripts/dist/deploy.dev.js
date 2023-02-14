@@ -16,10 +16,6 @@ function main() {
 
         case 5:
           hello_world = _context.sent;
-          //this is just a sample for the constructor 
-          //to deploy -> npx hardhat run scripts/deploy.js --network polygon_mumbai
-          //then go to arguments.js for instructions on how to verify this contract to interact 
-          //on the explorer directly 
           console.log("Contract deployed to address:", hello_world.address);
 
         case 7:
