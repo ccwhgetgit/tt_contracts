@@ -1,3 +1,5 @@
+//Alchemy Key : https://polygon-mumbai.g.alchemy.com/v2/3oE8BGNsfXndWYJbZxEkLCsZZ6STLO2R 
+
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
@@ -13,14 +15,13 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol"; /
 //building minting platform for users to create their tickets 
 
 /*
-Sample Constructor - [a,b], [1,1], [1,1], "nice", "02021200", "capitol", 1, 1, "yo" 
 Next steps: 
-1. ERC721URI storage for ipfs integration  -> done 
-2. Cancel listings and collections  -> FE
-3. Update event listing and ticket details -> off chain (separate script to conigure metadata)
+1. ERC721URI storage for ipfs integration 
+2. Cancel listings and collections 
+3. Update event listing and ticket details
 */
 
-contract Event is  Ownable, ReentrancyGuard, ERC721URIStorage {
+contract SimpleEvent is  Ownable, ReentrancyGuard, ERC721URIStorage {
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
 
@@ -79,12 +80,13 @@ contract Event is  Ownable, ReentrancyGuard, ERC721URIStorage {
     uint256[] categoryPrices; 
     uint256[] categoryLimits;
 
+    event userMints(address user);
     event ticketMinted(uint256 tokenId, address recipient); 
     event ticketListed(uint256 tokenId, address user, uint256 price); 
     event ticketUnlisted(uint256 tokenId, address user);
-    event checkedIn(uint256 tokenId, address user); 
+    event checkedIn(uint256 tokenId, address user);
+    string baseURI = ""; 
 
-    //need to add in refunds if there is excess payment 
 
     constructor ( string[] memory _categories, uint256[] memory _categoryPrices, uint256[] memory _categoryLimits,  string memory _eventName, string memory _dateTime, string memory  _venue, uint256 _commission, uint256  _maxTicketPerAddress, string memory _eventSymbol) ERC721(_eventName, _eventSymbol) public payable{
         //
@@ -92,10 +94,6 @@ contract Event is  Ownable, ReentrancyGuard, ERC721URIStorage {
         categoryPrices = _categoryPrices; 
         categoryLimits = _categoryLimits;
         
-        //eventName, dateTime, venue are not part of the attributes for a ticket 
-        //this will be changed in the ipfs metadata instead off chain 
-        //only the attributes listed in the struct are on chain and these do not require user input for updates
-
         eventName = _eventName; 
         dateTime = _dateTime; 
         venue = _venue; 
@@ -115,21 +113,21 @@ contract Event is  Ownable, ReentrancyGuard, ERC721URIStorage {
             ticketSupply += categoryLimits[i];
         }
 
-        //transfer listing fee to platform
-        (bool success, ) = payable(protocolRecipient).call{value: mintingPlatformFee}("");
-        require(success, "Transfer failed");
 
     } 
 
-
-    //for the tokenURI 
-    function _baseURI() internal pure override returns (string memory) {
-        return "https://example.com/nft/";
+    function getBaseURI() internal view returns (string memory){
+        return baseURI;
     }
 
-    
+    function _setBaseURI(string memory baseURI) internal pure  returns(string memory){
+        baseURI = baseURI; 
+    } 
 
     function mint(string memory category, string memory tokenURI) public virtual payable returns(uint256){
+        emit userMints(msg.sender); //event emitted
+        //script should capture the event 
+
         require(ticketsPerOwner[msg.sender] < maxTicketsPerAddress, "Exceeded Max Minting");    
         require(idToCategoryDetails[category].currentSupply < idToCategoryDetails[category].maxNumber, "Exceeded Category minting");
         require(msg.value >= (idToCategoryDetails[category].price * (1 + (commission/100))), "Not enough ETH");
@@ -143,8 +141,7 @@ contract Event is  Ownable, ReentrancyGuard, ERC721URIStorage {
         _tokenIds.increment();
         uint256 newItemId = _tokenIds.current();
         _safeMint(msg.sender, newItemId);
-        _setTokenURI(newItemId, tokenURI);  //tokenURI params will be created on a separate py script 
-        //call get ticketdetails based on the tokenId -> input the metadata for pining in py script. 
+        _setTokenURI(newItemId, tokenURI); 
 
 
         ticketsPerOwner[msg.sender] += 1;
@@ -155,8 +152,9 @@ contract Event is  Ownable, ReentrancyGuard, ERC721URIStorage {
         return newItemId;  //get the newItemId
     }
 
-    function getTicketDetails(uint256 tokenId) public view returns(Ticket memory){ 
+    function getTicketDetails(uint256 tokenId) public view returns(Ticket memory ticket){ 
         return ticketIDs[tokenId];
+
     }
 
     function getCategoryInformation(string memory category) public view returns (uint256 _price, uint256 _maxNumber, uint256 _currentSupply){
