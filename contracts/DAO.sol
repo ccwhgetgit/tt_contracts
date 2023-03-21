@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
+import "./Profile.sol";
 
 contract Proposals {
+    
     struct Proposal {
         uint256 proposalID;
         string description;
@@ -19,13 +21,20 @@ contract Proposals {
 
     event ProposalAdded(uint256 proposalID, string description);
     event Voted(uint256 proposalID, address voter, bool vote);
-
     modifier onlyOwner() {
         require(msg.sender == owner, "Not authorized");
         _;
     }
+    Profile profile;
+
+    // receive address during deployment script
+    constructor(Profile _profile) {
+        profile = _profile;
+    }
+
 
     function createProposal(string memory description) public {
+        require(profile.checkMembership(msg.sender) == true, "Not authorized to create a proposal. Sign up on Profile");
         Proposal memory newProposal = Proposal(
             proposalIDCounter,
             description,
@@ -39,6 +48,7 @@ contract Proposals {
     }
 
     function vote(uint256 proposalID, bool choice) public {
+        require(profile.checkMembership(msg.sender) == true, "Not authorized to create a proposal. Sign up on Profile");
         require(hasVoted[msg.sender][proposalID] == false, "Already voted");
         if (choice) {
             proposals[proposalID].positiveVotes += 1;
@@ -47,6 +57,8 @@ contract Proposals {
         }
         hasVoted[msg.sender][proposalID] = true;
         emit Voted(proposalID, msg.sender, choice);
+        profile.earnPoints(2); //update points
+
     }
 
     function endProposal(uint256 proposalID) public onlyOwner {

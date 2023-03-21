@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 contract RentalAgreements {
@@ -43,6 +44,14 @@ contract RentalAgreements {
         _;
     }
 
+    Profile profile;
+
+    // receive address during deployment script
+    constructor(Profile _profile) {
+        profile = _profile;
+    }
+
+
     event RentCreated(
         uint256 rentId,
         address owner,
@@ -64,6 +73,7 @@ contract RentalAgreements {
         address _logsAddress,
         uint256 _logsId
     ) external {
+        require(profile.checkMembership(msg.sender) == true, "Not authorized to create a rent. Sign up on Profile");
         require(_renter != address(0), "Invalid renter address");
         require(_startDate < _endDate, "Invalid rent duration");
         require(_startDate > block.timestamp, "Invalid start duration");
