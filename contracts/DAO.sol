@@ -45,21 +45,20 @@ contract Proposals {
         } else {
             proposals[proposalID].negativeVotes += 1;
         }
-        hasVoted[msg.sender][proposalIDCounter] = true;
+        hasVoted[msg.sender][proposalID] = true;
         emit Voted(proposalID, msg.sender, choice);
     }
 
     function endProposal(uint256 proposalID) public onlyOwner {
-        require(proposalID < proposals.length - 1, "Invalid proposal");
+        require(proposalID < proposals.length, "Invalid proposal");
 
         Proposal storage proposal = proposals[proposalID];
         uint256 totalVotes = proposal.positiveVotes + proposal.negativeVotes;
-        if (totalVotes > minimumVotes) {
-            if (proposal.positiveVotes > proposal.negativeVotes) {
-                proposal.passed = true;
-            } else {
-                proposal.passed = false;
-            }
+        require(totalVotes > minimumVotes, "Quorum not reached");
+        if (proposal.positiveVotes > proposal.negativeVotes) {
+            proposal.passed = true;
+        } else {
+            proposal.passed = false;
         }
     }
 }
