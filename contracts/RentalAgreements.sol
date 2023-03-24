@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
+import "./Profile.sol";
 
 contract RentalAgreements {
     struct RentAgreement {
@@ -122,10 +123,8 @@ contract RentalAgreements {
     ) public payable onlyRenter(_rentId) onlyActiveAgreement(_rentId) {
         rentalAgreements[_rentId].isActive = false;
 
-        payable(rentalAgreements[_rentId].owner).transfer(
-            rentalAgreements[_rentId].rentalFee
-        );
-
+        // Clock points for renter
+        profile.earnPoints(3);
         emit RentCompleted(_rentId);
     }
 

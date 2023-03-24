@@ -37,6 +37,7 @@ contract Profile {
 
     //for voting -> 2 points, for purchase -> 1 point 
     //for tickets -> 1 point 
+    //for rental agreement completion -> 3 point 
     function earnPoints(uint256 amount) public  {
         members[msg.sender].points += amount;
         uint256 updatedPoints = members[msg.sender].points; 

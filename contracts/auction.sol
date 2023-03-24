@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.7;
+import "./Profile.sol";
+import "./RentalAgreement.sol";
 
 contract Auction {
     // static
@@ -21,11 +23,21 @@ contract Auction {
     event AuctionCancelled();
     event AuctionEnded();
 
-    constructor(uint _minIncrement, uint _timeInMilliseconds) {
+    Profile profile;
+    RentalAgreement rentalAgreement;
+    address logsAddress;
+    uint256 logsId;
+
+    // receive address during deployment script
+    constructor(Profile _profile, RentalAgreement _rentalAgreement, address _logsAddress, uint256 _logsId, uint _minIncrement, uint _timeInDays) {
         require(_timeInMilliseconds >= 0, "Time input must be > 0");
         minIncrement = _minIncrement;
         startBlock = block.timestamp;
-        endBlock = startBlock + _timeInMilliseconds;
+        endBlock = startBlock + (_timeInDays * 1 days);
+        rentalAgreement = _rentalAgreement;
+        profile = _profile;
+        logsAddress = _logsAddress;
+        logsId = _logsId;
     }
 
     function getHighestBid() public view
@@ -42,6 +54,7 @@ contract Auction {
         onlyNotOwner
         returns (bool success)
     {
+        require(profile.checkMembership(msg.sender) == true, "Not authorized to place a bid. Sign up on Profile");
         // reject payments of 0 ETH
         require(msg.value > 0);
 
@@ -119,8 +132,8 @@ contract Auction {
                 withdrawalAmount = highestBindingBid;
                 ownerHasWithdrawn = true;
 
-                // TODO start a logistics contract with winner address
-
+                // start a logistics contract with winner address
+                rentalAgreement.createRent(highestBidder, block.timestamp, block.timestamp + 7 days, highestBindingBid, logsAddress, logsId);
             } else if (msg.sender == highestBidder) {
                 withdrawalAccount = highestBidder;
                 if (ownerHasWithdrawn) {
