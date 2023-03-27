@@ -6,20 +6,20 @@ import "./RentalAgreement.sol";
 contract Auction {
     // static
     address _owner = msg.sender;
-    uint public minIncrement;
-    uint public startBlock;
-    uint public endBlock;
+    uint256 public minIncrement;
+    uint256 public startBlock;
+    uint256 public endBlock;
 
     // state
     bool public canceled;
     bool public endedSuccessfully;
-    uint public highestBindingBid;
+    uint256 public highestBindingBid;
     address public highestBidder;
     mapping(address => uint256) public fundsByBidder;
     bool ownerHasWithdrawn;
 
-    event BidReceived(address bidder, uint bid, address highestBidder, uint highestBid, uint highestBindingBid);
-    event WithdrawalDone(address withdrawer, address withdrawalAccount, uint amount);
+    event BidReceived(address bidder, uint256 bid, address highestBidder, uint256 highestBid, uint256 highestBindingBid);
+    event WithdrawalDone(address withdrawer, address withdrawalAccount, uint256 amount);
     event AuctionCancelled();
     event AuctionEnded();
 
@@ -29,18 +29,17 @@ contract Auction {
     uint256 logsId;
 
     // receive address during deployment script
-    constructor(Profile _profile, RentalAgreement _rentalAgreement, address _logsAddress, uint256 _logsId, uint _minIncrement, uint _timeInDays) {
+    constructor(Profile _profile, RentalAgreement _rentalAgreement, uint256 _logsId, uint256 _minIncrement, uint256 _timeInDays) {
         minIncrement = _minIncrement;
         startBlock = block.timestamp;
         endBlock = startBlock + (_timeInDays * 1 days);
         rentalAgreement = _rentalAgreement;
         profile = _profile;
-        logsAddress = _logsAddress;
         logsId = _logsId;
     }
 
     function getHighestBid() public view
-        returns (uint)
+        returns (uint256)
     {
         return fundsByBidder[highestBidder];
     }
@@ -57,12 +56,12 @@ contract Auction {
         // reject payments of 0 ETH
         require(msg.value > 0);
 
-        uint newBid = fundsByBidder[msg.sender] + msg.value;
+        uint256 newBid = fundsByBidder[msg.sender] + msg.value;
         require(newBid > highestBindingBid);
 
         // grab the previous highest bid (before updating fundsByBidder, in case msg.sender is the
         // highestBidder and is just increasing their maximum bid).
-        uint highestBid = fundsByBidder[highestBidder];
+        uint256 highestBid = fundsByBidder[highestBidder];
 
         fundsByBidder[msg.sender] = newBid;
 
@@ -80,9 +79,9 @@ contract Auction {
         return true;
     }
 
-    function min(uint a, uint b)
+    function min(uint256 a, uint256 b)
         private pure
-        returns (uint)
+        returns (uint256)
     {
         if (a < b) return a;
         return b;
@@ -115,7 +114,7 @@ contract Auction {
         returns (bool success)
     {
         address withdrawalAccount;
-        uint withdrawalAmount;
+        uint256 withdrawalAmount;
 
         if (canceled) {
             // if the auction was canceled, everyone should simply be allowed to withdraw their funds
@@ -132,7 +131,7 @@ contract Auction {
                 ownerHasWithdrawn = true;
 
                 // start a logistics contract with winner address
-                rentalAgreement.createRent(highestBidder, block.timestamp, block.timestamp + 7 days, highestBindingBid, logsAddress, logsId);
+                rentalAgreement.createRent(highestBidder, block.timestamp, block.timestamp + 7 days, highestBindingBid, logsId);
             } else if (msg.sender == highestBidder) {
                 withdrawalAccount = highestBidder;
                 if (ownerHasWithdrawn) {

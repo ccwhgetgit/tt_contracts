@@ -10,7 +10,6 @@ contract RentalAgreement {
         uint256 startDate;
         uint256 endDate;
         uint256 rentalFee;
-        address logsAddress;
         uint256 logsId;
         bool isActive;
     }
@@ -60,7 +59,6 @@ contract RentalAgreement {
         uint256 startDate,
         uint256 endDate,
         uint256 rentalFee,
-        address logsAddress,
         uint256 logsId
     );
     event RentCancelled(uint256 rentId);
@@ -71,7 +69,6 @@ contract RentalAgreement {
         uint256 _startDate,
         uint256 _endDate,
         uint256 _rentalFee,
-        address _logsAddress,
         uint256 _logsId
     ) external {
         require(profile.checkMembership(msg.sender) == true, "Not authorized to create a rent. Sign up on Profile");
@@ -88,7 +85,6 @@ contract RentalAgreement {
             _startDate,
             _endDate,
             _rentalFee,
-            _logsAddress,
             _logsId,
             true
         );
@@ -103,7 +99,6 @@ contract RentalAgreement {
             _startDate,
             _endDate,
             _rentalFee,
-            _logsAddress,
             _logsId
         );
     }
