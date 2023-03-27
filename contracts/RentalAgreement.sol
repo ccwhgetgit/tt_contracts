@@ -71,10 +71,9 @@ contract RentalAgreement {
         uint256 _rentalFee,
         uint256 _logsId
     ) external {
-        require(profile.checkMembership(msg.sender) == true, "Not authorized to create a rent. Sign up on Profile");
         require(_renter != address(0), "Invalid renter address");
         require(_startDate < _endDate, "Invalid rent duration");
-        require(_startDate > block.timestamp, "Invalid start duration");
+        require(_startDate >= block.timestamp, "Invalid start duration");
 
         rentIdCounter++;
 

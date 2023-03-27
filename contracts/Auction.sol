@@ -16,7 +16,7 @@ contract Auction {
     uint256 public highestBindingBid;
     address public highestBidder;
     mapping(address => uint256) public fundsByBidder;
-    bool ownerHasWithdrawn;
+    bool public ownerHasWithdrawn;
 
     event BidReceived(address bidder, uint256 bid, address highestBidder, uint256 highestBid, uint256 highestBindingBid);
     event WithdrawalDone(address withdrawer, address withdrawalAccount, uint256 amount);
@@ -169,12 +169,12 @@ contract Auction {
     }
 
     modifier onlyAfterStart {
-        require(block.number >= startBlock, "Only after start block");
+        require(block.timestamp >= startBlock, "Only after start block");
         _;
     }
 
     modifier onlyBeforeEnd {
-        require(block.number <= endBlock, "Only before end block");
+        require(block.timestamp <= endBlock, "Only before end block");
         _;
     }
 
