@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.8.2",
+    "bignumber": "^1.1.0",
+    "bignumber.js": "^9.1.1",
+    "hardhat": "^2.13.0",
+    "truffle-assertions": "^0.9.2"
+  }
+}

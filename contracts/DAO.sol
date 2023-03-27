@@ -1,9 +1,9 @@
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.4;
+
 import "./Profile.sol";
 
-contract Proposals {
-    
+contract DAO {
+    Profile profile;
     struct Proposal {
         uint256 proposalID;
         string description;
@@ -15,21 +15,21 @@ contract Proposals {
     Proposal[] public proposals;
     address owner = msg.sender;
     uint256 public proposalIDCounter = 0;
-    uint256 public minimumVotes = 10;
+    uint256 public minimumVotes = 2;
     mapping(address => bool) public users;
     mapping(address => mapping(uint256 => bool)) hasVoted;
 
     event ProposalAdded(uint256 proposalID, string description);
     event Voted(uint256 proposalID, address voter, bool vote);
+    event EarnPoints(uint256 proposalID, address voter, uint256 votingPower);
     modifier onlyOwner() {
         require(msg.sender == owner, "Not authorized");
         _;
     }
-    Profile profile;
 
     // receive address during deployment script
-    constructor(Profile _profile) {
-        profile = _profile;
+    constructor(address _profile) public{
+        profile = Profile(_profile);
     }
 
 
@@ -48,6 +48,9 @@ contract Proposals {
     }
 
     function vote(uint256 proposalID, bool choice) public {
+        require(proposalID < proposals.length, "Invalid proposal");
+        require(proposals[proposalID].passed == false, "Proposal has ended");
+
         require(profile.checkMembership(msg.sender) == true, "Not authorized to create a proposal. Sign up on Profile");
         require(hasVoted[msg.sender][proposalID] == false, "Already voted");
         if (choice) {
@@ -57,7 +60,7 @@ contract Proposals {
         }
         hasVoted[msg.sender][proposalID] = true;
         emit Voted(proposalID, msg.sender, choice);
-        profile.earnPoints(2); //update points
+        profile.earnPoints(msg.sender, 2); //update points
 
     }
 

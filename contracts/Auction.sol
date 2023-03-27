@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.7;
+pragma solidity ^0.8.4;
+
 import "./Profile.sol";
 import "./RentalAgreement.sol";
 
@@ -30,7 +30,6 @@ contract Auction {
 
     // receive address during deployment script
     constructor(Profile _profile, RentalAgreement _rentalAgreement, address _logsAddress, uint256 _logsId, uint _minIncrement, uint _timeInDays) {
-        require(_timeInMilliseconds >= 0, "Time input must be > 0");
         minIncrement = _minIncrement;
         startBlock = block.timestamp;
         endBlock = startBlock + (_timeInDays * 1 days);
