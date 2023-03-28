@@ -79,7 +79,7 @@ contract RentalAgreement {
 
         rentalAgreements[rentIdCounter] = RentAgreement(
             rentIdCounter,
-            msg.sender,
+            tx.origin,
             _renter,
             _startDate,
             _endDate,
@@ -88,12 +88,12 @@ contract RentalAgreement {
             true
         );
 
-        ownerAgreements[msg.sender].push(rentIdCounter);
+        ownerAgreements[tx.origin].push(rentIdCounter);
         renterAgreements[_renter].push(rentIdCounter);
 
         emit RentCreated(
             rentIdCounter,
-            msg.sender,
+            tx.origin,
             _renter,
             _startDate,
             _endDate,
@@ -120,6 +120,14 @@ contract RentalAgreement {
         // Clock points for renter
         profile.earnPoints(msg.sender, 3);
         emit RentCompleted(_rentId);
+    }
+
+    function getOwner(uint256 rentId) public view returns (address) {
+        return rentalAgreements[rentId].owner;
+    }
+
+    function getRenter(uint256 rentId) public view returns (address) {
+        return rentalAgreements[rentId].renter;
     }
 
     function getOwnerAgreements(address _owner)

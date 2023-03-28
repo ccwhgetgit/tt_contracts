@@ -16,7 +16,7 @@ contract("Auction", function (accounts) {
     auctionInstance = await Auction.deployed();
   });
 
-  console.log("Testing Auction contract");
+  console.log("Testing Auction and Rental Agreeement contract");
 
   it("Create Profile", async () => {
     let pOwner = await profileInstance.createMember({ from: accounts[0] });
@@ -93,5 +93,24 @@ contract("Auction", function (accounts) {
 
     truffleAssert.eventEmitted(withdrawFund, "WithdrawalDone");
     await assert(afterWithdrawal.isGreaterThan(initial));
+  });
+
+  // Rental Agreement Tests
+  it("Test check Rental Agreement owner and renter address", async () => {
+    // Check rental agreement
+    await assert((await rentalAgreementInstance.getRenter(1)) == accounts[2]);
+    await assert((await rentalAgreementInstance.getOwner(1)) == accounts[0]);
+  });
+
+  it("Test complete rental agreement and check points earned", async () => {
+    let initialPoints = new BigNumber(await profileInstance.checkPoints(accounts[2]));
+    // Check rental agreement
+    let result = await rentalAgreementInstance.completeAgreement(1, { from: accounts[2] });
+    truffleAssert.eventEmitted(result, "RentCompleted");
+
+    let afterPoints = new BigNumber(await profileInstance.checkPoints(accounts[2]));
+
+    // Check that renter gained 3 points
+    await assert(afterPoints.minus(initialPoints).eq(3));
   });
 });
