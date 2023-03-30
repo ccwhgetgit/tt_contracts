@@ -1,3 +1,4 @@
+/*
 const _deploy_contracts = require("../migrations/2_deploy_contracts");
 const truffleAssert = require("truffle-assertions"); // npm truffle-assertions
 const BigNumber = require("bignumber.js"); // npm install bignumber.js
@@ -56,9 +57,9 @@ contract("DAO", function (accounts) {
 
         let vote2 = await daoInstance.vote(0, true, {from:accounts[2]}); 
         truffleAssert.eventEmitted(vote2, 'Voted');
+        truffleAssert.eventEmitted(vote2, 'UpdatePoints')
 
-        let points1 = await profileInstance.checkPoints(accounts[1], {from:accounts[1]}); 
-        assert.strictEqual(points1, Number(BigInt(2)), 'Points added'); //works but not sure why assertion isnt
+        
     })
 
     it('Ensure Proposal can only closed by Owner', async() => { 

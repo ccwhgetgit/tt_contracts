@@ -22,6 +22,8 @@ contract DAO {
     event ProposalAdded(uint256 proposalID, string description);
     event Voted(uint256 proposalID, address voter, bool vote);
     event EarnPoints(uint256 proposalID, address voter, uint256 votingPower);
+    event UpdatePoints(address user, uint256 points); 
+
     modifier onlyOwner() {
         require(msg.sender == owner, "Not authorized");
         _;
@@ -61,6 +63,7 @@ contract DAO {
         hasVoted[msg.sender][proposalID] = true;
         emit Voted(proposalID, msg.sender, choice);
         profile.earnPoints(msg.sender, 2); //update points
+        emit UpdatePoints(msg.sender, profile.checkPoints(msg.sender)); 
 
     }
 
