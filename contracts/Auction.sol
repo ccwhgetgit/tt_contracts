@@ -20,7 +20,7 @@ contract Auction is ReentrancyGuard{
     bool public ownerHasWithdrawn;
 
     event BidReceived(address bidder, uint256 bid, address highestBidder, uint256 highestBid, uint256 highestBindingBid);
-    event WithdrawalDone(address withdrawer, address withdrawalAccount, uint256 amount);
+    event WithdrawalDone(address withdrawer, address withdrawalAccount, uint256 amount, uint256 discountPercentage);
     event AuctionCancelled();
     event AuctionEnded();
 
@@ -118,6 +118,7 @@ contract Auction is ReentrancyGuard{
     {
         address withdrawalAccount;
         uint256 withdrawalAmount;
+        uint256 discount = 100;
 
         if (canceled) {
             // if the auction was canceled, everyone should simply be allowed to withdraw their funds
@@ -127,10 +128,20 @@ contract Auction is ReentrancyGuard{
         } else {
             // the auction finished without being canceled
 
+            // Discount in percentage
+            uint256 points = profile.checkPoints(highestBidder);
+            if (points >= 3) {
+                discount = 95;
+            } else if (points == 2) {
+                discount = 97;
+            } else if (points == 1) {
+                discount = 99;
+            }
+
             if (msg.sender == _owner) {
                 // the auction's owner should be allowed to withdraw the highestBindingBid
                 withdrawalAccount = highestBidder;
-                withdrawalAmount = highestBindingBid;
+                withdrawalAmount = highestBindingBid * (discount / 100);
                 ownerHasWithdrawn = true;
 
                 // start a logistics contract with winner address
@@ -140,7 +151,7 @@ contract Auction is ReentrancyGuard{
                 if (ownerHasWithdrawn) {
                     withdrawalAmount = fundsByBidder[highestBidder];
                 } else {
-                    withdrawalAmount = fundsByBidder[highestBidder] - highestBindingBid;
+                    withdrawalAmount = fundsByBidder[highestBidder] - (highestBindingBid  * (discount / 100));
                 }
 
             } else {
@@ -156,8 +167,7 @@ contract Auction is ReentrancyGuard{
         // send funds back
         require(payable(msg.sender).send(withdrawalAmount));
 
-        emit WithdrawalDone(msg.sender, withdrawalAccount, withdrawalAmount);
-
+        emit WithdrawalDone(msg.sender, withdrawalAccount, withdrawalAmount, (100 - discount));
         return true;
     }
 
