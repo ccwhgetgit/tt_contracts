@@ -2,8 +2,9 @@ pragma solidity ^0.8.4;
 
 import "./Profile.sol";
 import "./RentalAgreement.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-contract Auction {
+contract Auction is ReentrancyGuard{
     // static
     address _owner = msg.sender;
     uint256 public minIncrement;
@@ -50,6 +51,7 @@ contract Auction {
         onlyBeforeEnd
         onlyNotCanceled
         onlyNotOwner
+        nonReentrant
         returns (bool success)
     {
         require(profile.checkMembership(msg.sender) == true, "Not authorized to place a bid. Sign up on Profile");
@@ -111,6 +113,7 @@ contract Auction {
 
     function withdraw() public payable
         onlyEndedOrCanceled
+        nonReentrant
         returns (bool success)
     {
         address withdrawalAccount;
