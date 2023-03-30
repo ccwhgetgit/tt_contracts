@@ -89,7 +89,8 @@ contract Event is ERC721 {
     }
 
     function mint(uint256 _category) public payable {
-        //require(profile.checkMembership(msg.sender) == true, "Not authorised");
+        //require(profile.checkMembership(msg.sender) == true, "Not authorized to mint a ticket. Sign up on Profile");
+
         require(
             ticketCategories[_category].sold <
                 ticketCategories[_category].supplyLimit,
@@ -114,7 +115,10 @@ contract Event is ERC721 {
         ticketsPerOwner[msg.sender] += 1;
         ticketIDs[newItemId] = newTicket;
         ticketCategories[_category].sold += 1;
-        organizer.transfer(ticketCategories[_category].price);
+         (bool success, ) = payable(organizer).call{
+            value:ticketCategories[_category].price
+        }("");
+        require(success, "Transfer failed");
         emit TicketMinted(msg.sender, newItemId);
     }
 

@@ -34,9 +34,6 @@ contract Profile {
         members[msg.sender] = Member(payable(msg.sender), Tier.Bronze, 0);
     }
 
-    //for voting -> 2 points, for purchase -> 1 point 
-    //for tickets -> 1 point 
-    //for rental agreement completion -> 3 point 
     function earnPoints(address _address, uint256 amount) public  {
         members[_address].points += amount;
         uint256 updatedPoints = members[_address].points; 

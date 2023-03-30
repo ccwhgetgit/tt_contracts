@@ -53,7 +53,7 @@ contract DAO {
         require(proposalID < proposals.length, "Invalid proposal");
         require(proposals[proposalID].passed == false, "Proposal has ended");
 
-        require(profile.checkMembership(msg.sender) == true, "Not authorized to create a proposal. Sign up on Profile");
+        require(profile.checkMembership(msg.sender) == true, "Not authorized to vote for a proposal. Sign up on Profile");
         require(hasVoted[msg.sender][proposalID] == false, "Already voted");
         if (choice) {
             proposals[proposalID].positiveVotes += 1;

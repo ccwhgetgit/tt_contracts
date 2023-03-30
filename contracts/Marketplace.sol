@@ -35,7 +35,6 @@ contract Marketplace is ReentrancyGuard, IERC721Receiver {
         uint256 indexed tokenId
     );
 
-    event PointsEarned(address member, uint256 points); 
 
     modifier isOwner(address ticketAddress, uint256 tokenId) {
         require(
@@ -75,6 +74,7 @@ contract Marketplace is ReentrancyGuard, IERC721Receiver {
         payable
         nonReentrant
     {
+        //require(profile.checkMembership(msg.sender) == true, "Not authorized to buy anything. Sign up on Profile");
         MarketItem memory listedItem = listings[ticketAddress][tokenId];
         require(listedItem.price > 0, "Not listed");
         require(
@@ -99,7 +99,6 @@ contract Marketplace is ReentrancyGuard, IERC721Receiver {
         require(success, "Transfer failed");
         emit TicketTransferred(prevOwner, newOwner, tokenId);
         profile.earnPoints(newOwner, 3); 
-        emit PointsEarned(newOwner, 3);
 
     }
 

@@ -1,4 +1,4 @@
-/*
+
 const _deploy_contracts = require("../migrations/2_deploy_contracts");
 const truffleAssert = require("truffle-assertions"); // npm truffle-assertions
 const BigNumber = require("bignumber.js"); // npm install bignumber.js
@@ -36,7 +36,7 @@ contract("DAO", function (accounts) {
     })
 
     it('Ensure Voter is a member', async() => { 
-        await truffleAssert.reverts(daoInstance.vote(0, true, {from:accounts[3]}) ,"Not authorized to create a proposal. Sign up on Profile");        
+        await truffleAssert.reverts(daoInstance.vote(0, true, {from:accounts[3]}) ,"Not authorized to vote for a proposal. Sign up on Profile");        
     })
 
     it('Ensure Proposal Number is valid', async() => { 

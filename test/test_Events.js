@@ -38,6 +38,8 @@ contract('Event', function (accounts) {
   it('Check membership', async() => { 
     truffleAssert.reverts(eventInstance.mint(0, {from: accounts[3], value:oneEth}));
   })*/
+
+  
   it('Mint tickets', async() => { 
     let m1 = await eventInstance.mint(1, {from:accounts[1], value:oneEth}); 
     truffleAssert.eventEmitted(m1, "TicketMinted");
