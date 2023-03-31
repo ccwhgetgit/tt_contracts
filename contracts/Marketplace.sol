@@ -4,8 +4,9 @@ pragma solidity ^0.8.4;
 import "./Profile.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
-contract Marketplace is ReentrancyGuard {
+contract Marketplace is ReentrancyGuard, IERC721Receiver {
     Profile profile;
     address owner = msg.sender;
     uint256 protocolFee = 2;
@@ -17,6 +18,23 @@ contract Marketplace is ReentrancyGuard {
     }
 
     mapping(address => mapping(uint256 => MarketItem)) private listings;
+    event TicketTransferred(
+        address _prevOwner,
+        address _newOwner,
+        uint256 tokenId
+    );
+    event ListItem(
+        address seller,
+        address tokenAddress,
+        uint256 tokenId,
+        uint256 price
+    );
+    event UnlistItem(
+        address indexed seller,
+        address indexed tokenAddress,
+        uint256 indexed tokenId
+    );
+
 
     modifier isOwner(address ticketAddress, uint256 tokenId) {
         require(
@@ -35,14 +53,12 @@ contract Marketplace is ReentrancyGuard {
         address ticketAddress,
         uint256 tokenId,
         uint256 price
-    ) public isOwner(ticketAddress, tokenId) {
+    ) public isOwner(ticketAddress, tokenId) nonReentrant {
         MarketItem memory listing = listings[ticketAddress][tokenId];
         require(listing.price <= 0, "Already listed");
-        require(
-            IERC721(ticketAddress).getApproved(tokenId) == address(this),
-            "NFT not approved yet"
-        );
         listings[ticketAddress][tokenId] = MarketItem(price, msg.sender);
+        
+        emit ListItem(msg.sender, ticketAddress, tokenId, price);
     }
 
     function unlistItem(address ticketAddress, uint256 tokenId)
@@ -50,6 +66,7 @@ contract Marketplace is ReentrancyGuard {
         isOwner(ticketAddress, tokenId)
     {
         delete (listings[ticketAddress][tokenId]);
+        emit UnlistItem(msg.sender, ticketAddress, tokenId);
     }
 
     function buy(address ticketAddress, uint256 tokenId)
@@ -63,16 +80,24 @@ contract Marketplace is ReentrancyGuard {
             msg.value > (listedItem.price * (1 + protocolFee / 100)),
             "Not enough"
         );
+        require(
+            IERC721(ticketAddress).getApproved(tokenId) == address(this),
+            "Not approved"
+        );
         delete (listings[ticketAddress][tokenId]);
+        address newOwner = msg.sender;
+        address prevOwner = listedItem.seller;
         IERC721(ticketAddress).safeTransferFrom(
-            listedItem.seller,
-            msg.sender,
+            prevOwner,
+            newOwner,
             tokenId
         );
-        (bool success, ) = payable(listedItem.seller).call{
+        (bool success, ) = payable(newOwner).call{
             value: listedItem.price
         }("");
         require(success, "Transfer failed");
+        emit TicketTransferred(prevOwner, newOwner, tokenId);
+
     }
 
     function updateListing(
@@ -84,6 +109,15 @@ contract Marketplace is ReentrancyGuard {
         MarketItem memory listing = listings[ticketAddress][tokenId];
         require(listing.price <= 0, "Already listed");
         listings[ticketAddress][tokenId].price = newPrice;
+    }
+
+    function onERC721Received(
+        address operator,
+        address from,
+        uint256 tokenId,
+        bytes memory data
+    ) public virtual override returns (bytes4) {
+        return this.onERC721Received.selector;
     }
 
     function getListing(address ticketAddress, uint256 tokenId)

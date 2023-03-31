@@ -3,9 +3,11 @@ pragma solidity ^0.8.4;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "./Profile.sol";
+import "./Marketplace.sol";
 
 contract Event is ERC721 {
     Profile profile;
+    Marketplace marketplace;
     using Counters for Counters.Counter;
     Counters.Counter private _ticketIds;
 
@@ -22,7 +24,6 @@ contract Event is ERC721 {
     struct Ticket {
         address organizer;
         address ticketOwner;
-        address prevTicketOwner;
         TicketCategory category; //category within ticket
         uint256 currentPrice;
         bool ticketListing;
@@ -33,6 +34,8 @@ contract Event is ERC721 {
     mapping(uint256 => TicketCategory) public ticketCategories;
     mapping(uint256 => Ticket) public ticketIDs;
     mapping(address => uint256) public ticketsPerOwner;
+    event TicketMinted(address _owner, uint256 ticketId);
+    event TicketTransferred(address _newOwner, uint256 ticketId);
 
     modifier isTicketOwner(uint256 ticketId) {
         require(
@@ -54,18 +57,15 @@ contract Event is ERC721 {
 
     constructor(
         address _profile,
+        address _marketplace,
         string[] memory _categories,
         uint256[] memory _categoryPrices,
         uint256[] memory _categoryLimits,
         string memory _eventName,
         string memory _eventSymbol
     ) public payable ERC721(_eventName, _eventSymbol) {
+        marketplace = Marketplace(_marketplace);
         profile = Profile(_profile);
-        require(
-            profile.checkMembership(msg.sender) == true,
-            "Not authorized to create a proposal. Sign up on Profile"
-        );
-
         require(
             _categories.length == _categoryPrices.length,
             "Please key in again"
@@ -74,7 +74,7 @@ contract Event is ERC721 {
             _categories.length == _categoryLimits.length,
             "Please key in again"
         );
-        categoryId = 1;
+        categoryId = 0;
         for (uint256 i = 0; i < _categories.length; i++) {
             TicketCategory memory newTicketCategory = TicketCategory(
                 _categories[i],
@@ -90,11 +90,6 @@ contract Event is ERC721 {
 
     function mint(uint256 _category) public payable {
         require(
-            profile.checkMembership(msg.sender) == true,
-            "Not authorized to create a proposal. Sign up on Profile"
-        );
-
-        require(
             ticketCategories[_category].sold <
                 ticketCategories[_category].supplyLimit,
             "Not enough tickets available for this category"
@@ -109,7 +104,6 @@ contract Event is ERC721 {
         Ticket memory newTicket = Ticket(
             organizer,
             msg.sender,
-            address(0),
             ticketCategories[_category],
             ticketCategories[_category].price,
             false
@@ -119,25 +113,20 @@ contract Event is ERC721 {
         ticketsPerOwner[msg.sender] += 1;
         ticketIDs[newItemId] = newTicket;
         ticketCategories[_category].sold += 1;
-        organizer.transfer(ticketCategories[_category].price);
+         (bool success, ) = payable(organizer).call{
+            value:ticketCategories[_category].price
+        }("");
+        require(success, "Transfer failed");
+        emit TicketMinted(msg.sender, newItemId);
     }
 
-    function transfer(uint256 ticketId, address newOwner)
-        public
-        isTicketOwner(ticketId)
-        validTicketId(ticketId)
-    {
-        ticketIDs[ticketId].prevTicketOwner = ticketIDs[ticketId].ticketOwner;
-        ticketIDs[ticketId].ticketOwner = newOwner;
-    }
-
-    function getPreviousOwner(uint256 ticketId)
+    function getOwner(uint256 ticketId)
         public
         view
         validTicketId(ticketId)
         returns (address)
     {
-        return ticketIDs[ticketId].prevTicketOwner;
+        return ticketIDs[ticketId].ticketOwner;
     }
 
     function getCategoryInformation(uint256 category)
