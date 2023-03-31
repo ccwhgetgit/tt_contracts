@@ -1,4 +1,4 @@
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
@@ -89,8 +89,6 @@ contract Event is ERC721 {
     }
 
     function mint(uint256 _category) public payable {
-        //require(profile.checkMembership(msg.sender) == true, "Not authorized to mint a ticket. Sign up on Profile");
-
         require(
             ticketCategories[_category].sold <
                 ticketCategories[_category].supplyLimit,
