@@ -10,7 +10,6 @@ contract RentalAgreement {
         uint256 startDate;
         uint256 endDate;
         uint256 rentalFee;
-        address logsAddress;
         uint256 logsId;
         bool isActive;
     }
@@ -60,7 +59,6 @@ contract RentalAgreement {
         uint256 startDate,
         uint256 endDate,
         uint256 rentalFee,
-        address logsAddress,
         uint256 logsId
     );
     event RentCancelled(uint256 rentId);
@@ -71,39 +69,35 @@ contract RentalAgreement {
         uint256 _startDate,
         uint256 _endDate,
         uint256 _rentalFee,
-        address _logsAddress,
         uint256 _logsId
     ) external {
-        require(profile.checkMembership(msg.sender) == true, "Not authorized to create a rent. Sign up on Profile");
         require(_renter != address(0), "Invalid renter address");
         require(_startDate < _endDate, "Invalid rent duration");
-        require(_startDate > block.timestamp, "Invalid start duration");
+        require(_startDate >= block.timestamp, "Invalid start duration");
 
         rentIdCounter++;
 
         rentalAgreements[rentIdCounter] = RentAgreement(
             rentIdCounter,
-            msg.sender,
+            tx.origin,
             _renter,
             _startDate,
             _endDate,
             _rentalFee,
-            _logsAddress,
             _logsId,
             true
         );
 
-        ownerAgreements[msg.sender].push(rentIdCounter);
+        ownerAgreements[tx.origin].push(rentIdCounter);
         renterAgreements[_renter].push(rentIdCounter);
 
         emit RentCreated(
             rentIdCounter,
-            msg.sender,
+            tx.origin,
             _renter,
             _startDate,
             _endDate,
             _rentalFee,
-            _logsAddress,
             _logsId
         );
     }
@@ -126,6 +120,14 @@ contract RentalAgreement {
         // Clock points for renter
         profile.earnPoints(msg.sender, 3);
         emit RentCompleted(_rentId);
+    }
+
+    function getOwner(uint256 rentId) public view returns (address) {
+        return rentalAgreements[rentId].owner;
+    }
+
+    function getRenter(uint256 rentId) public view returns (address) {
+        return rentalAgreements[rentId].renter;
     }
 
     function getOwnerAgreements(address _owner)
