@@ -58,7 +58,31 @@ contract('Event', function (accounts) {
     truffleAssert.eventEmitted(l3, 'ListItem')
   })
 
+  it('Remove the ticket listing', async () => {
+    let ul1 = await marketplaceInstance.unlistItem(
+      eventInstance.address,
+      1,
+      {
+        from: accounts[1],
+      },
+    )
+    truffleAssert.eventEmitted(ul1, 'UnlistItem');
+    await assert.notStrictEqual(marketplaceInstance.getListingPrice(eventInstance.address, 1), 0, "Unable to unlist a Ticket");
+
+  })
+
   it('Update the ticket listing', async () => {
+    let a1 = await eventInstance.approve(marketplaceInstance.address, 1, {
+      from: accounts[1],
+    })
+    let l3 = await marketplaceInstance.listItem(
+      eventInstance.address,
+      1,
+      BigNumber(1200000000000000000),
+      {
+        from: accounts[1],
+      },
+    )
     let u1 = await marketplaceInstance.updateListing(
       eventInstance.address,
       1,
