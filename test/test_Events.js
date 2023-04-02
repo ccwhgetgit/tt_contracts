@@ -30,30 +30,23 @@ contract('Event', function (accounts) {
     })
     assert.notStrictEqual(p1, undefined, 'Failed to make profile')
     assert.strictEqual(checkMembership1, true, 'Failed to make profile')
-
-
   })
 
-
-
-  
-  it('Mint tickets', async() => { 
-    let m1 = await eventInstance.mint(1, {from:accounts[1], value:oneEth}); 
-    truffleAssert.eventEmitted(m1, "TicketMinted");
-
+  it('Mint tickets', async () => {
+    let m1 = await eventInstance.mint(1, { from: accounts[1], value: oneEth })
+    truffleAssert.eventEmitted(m1, 'TicketMinted')
   })
 
-
-
-  it('Unable to mint as insufficient supply', async() => { 
-    truffleAssert.reverts(eventInstance.mint(1, {from:accounts[2], value:oneEth}));
+  it('Unable to mint as insufficient supply', async () => {
+    truffleAssert.reverts(
+      eventInstance.mint(1, { from: accounts[2], value: oneEth }),
+    )
   })
 
-
-  it('Update the ticket listing', async() => { 
+  it('Create a ticket listing', async () => {
     let a1 = await eventInstance.approve(marketplaceInstance.address, 1, {
       from: accounts[1],
-    }) 
+    })
     let l3 = await marketplaceInstance.listItem(
       eventInstance.address,
       1,
@@ -62,28 +55,29 @@ contract('Event', function (accounts) {
         from: accounts[1],
       },
     )
+    truffleAssert.eventEmitted(l3, 'ListItem')
+  })
+
+  it('Update the ticket listing', async () => {
     let u1 = await marketplaceInstance.updateListing(
       eventInstance.address,
       1,
-      BigNumber(1600000000000000000), {from:accounts[1]}); 
-    truffleAssert.eventEmitted(u1, "UpdateItem");
-
+      BigNumber(1600000000000000000),
+      { from: accounts[1] },
+    )
+    truffleAssert.eventEmitted(u1, 'UpdateItem')
   })
 
   it('User b can buy the Ticket', async () => {
-    
-
     let b1 = await marketplaceInstance.buy(eventInstance.address, 1, {
       from: accounts[2],
       value: new BigNumber(1800000000000000000),
     })
-    let newOwner = await eventInstance.ownerOf(1); 
+    let newOwner = await eventInstance.ownerOf(1)
     assert.strictEqual(
       newOwner,
       accounts[2],
       'Ticket was not transferred to the buyer',
     )
-
-
   })
 })
