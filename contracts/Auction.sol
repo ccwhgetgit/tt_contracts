@@ -1,11 +1,14 @@
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
 import "./Profile.sol";
 import "./RentalAgreement.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 contract Auction is ReentrancyGuard{
     // static
+    using SafeMath for uint256;
     address _owner = msg.sender;
     uint256 public minIncrement;
     uint256 public startBlock;
@@ -58,7 +61,8 @@ contract Auction is ReentrancyGuard{
         // reject payments of 0 ETH
         require(msg.value > 0);
 
-        uint256 newBid = fundsByBidder[msg.sender] + msg.value;
+        uint256 newBid = SafeMath.add(fundsByBidder[msg.sender], msg.value);
+
         require(newBid > highestBindingBid);
 
         // grab the previous highest bid (before updating fundsByBidder, in case msg.sender is the

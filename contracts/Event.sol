@@ -1,11 +1,14 @@
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "./Profile.sol";
 import "./Marketplace.sol";
 
 contract Event is ERC721 {
+    using SafeMath for uint256;
     Profile profile;
     Marketplace marketplace;
     using Counters for Counters.Counter;
@@ -83,7 +86,7 @@ contract Event is ERC721 {
                 0
             );
             ticketCategories[categoryId] = newTicketCategory;
-            ticketSupply += _categoryLimits[i];
+            ticketSupply = ticketSupply.add(_categoryLimits[i]);
             categoryId += 1;
         }
     }

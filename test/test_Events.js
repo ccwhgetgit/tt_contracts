@@ -49,7 +49,8 @@ contract('Event', function (accounts) {
     truffleAssert.reverts(eventInstance.mint(1, {from:accounts[2], value:oneEth}));
   })
 
-  it('User b can buy the Ticket', async () => {
+
+  it('Update the ticket listing', async() => { 
     let a1 = await eventInstance.approve(marketplaceInstance.address, 1, {
       from: accounts[1],
     }) 
@@ -61,10 +62,20 @@ contract('Event', function (accounts) {
         from: accounts[1],
       },
     )
+    let u1 = await marketplaceInstance.updateListing(
+      eventInstance.address,
+      1,
+      BigNumber(1600000000000000000), {from:accounts[1]}); 
+    truffleAssert.eventEmitted(u1, "UpdateItem");
+
+  })
+
+  it('User b can buy the Ticket', async () => {
+    
 
     let b1 = await marketplaceInstance.buy(eventInstance.address, 1, {
       from: accounts[2],
-      value: new BigNumber(1400000000000000000),
+      value: new BigNumber(1800000000000000000),
     })
     let newOwner = await eventInstance.ownerOf(1); 
     assert.strictEqual(

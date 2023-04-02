@@ -1,8 +1,12 @@
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
 import "./Profile.sol";
 
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+
 contract DAO {
+    using SafeMath for uint256;
     Profile profile;
     struct Proposal {
         uint256 proposalID;
@@ -44,7 +48,7 @@ contract DAO {
             0,
             false
         );
-        proposalIDCounter += 1;
+        proposalIDCounter = proposalIDCounter.add(1);
         proposals.push(newProposal);
         emit ProposalAdded(proposalIDCounter, description);
     }
@@ -71,7 +75,7 @@ contract DAO {
         require(proposalID < proposals.length, "Invalid proposal");
 
         Proposal storage proposal = proposals[proposalID];
-        uint256 totalVotes = proposal.positiveVotes + proposal.negativeVotes;
+        uint256 totalVotes =  proposal.positiveVotes.add(proposal.negativeVotes);
         require(totalVotes > minimumVotes, "Quorum not reached");
         if (proposal.positiveVotes > proposal.negativeVotes) {
             proposal.passed = true;

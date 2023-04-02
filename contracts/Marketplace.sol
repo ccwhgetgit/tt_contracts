@@ -5,9 +5,12 @@ import "./Profile.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-contract Marketplace is ReentrancyGuard, IERC721Receiver {
+contract Marketplace is ReentrancyGuard {
     Profile profile;
+    using SafeMath for uint256;
+
     address owner = msg.sender;
     uint256 protocolFee = 2;
     address protocolRecipient = 0xdD870fA1b7C4700F2BD7f44238821C26f7392148; //arbitray address
@@ -33,6 +36,12 @@ contract Marketplace is ReentrancyGuard, IERC721Receiver {
         address indexed seller,
         address indexed tokenAddress,
         uint256 indexed tokenId
+    );
+    event UpdateItem(
+        address indexed seller,
+        address indexed tokenAddress,
+        uint256 indexed tokenId, 
+        uint256 newPrice
     );
 
 
@@ -77,9 +86,9 @@ contract Marketplace is ReentrancyGuard, IERC721Receiver {
         MarketItem memory listedItem = listings[ticketAddress][tokenId];
         require(listedItem.price > 0, "Not listed");
         require(
-            msg.value > (listedItem.price * (1 + protocolFee / 100)),
-            "Not enough"
-        );
+    msg.value >= SafeMath.mul(listedItem.price, SafeMath.add(1, SafeMath.div(protocolFee, 100))),
+    "Not enough"
+);
         require(
             IERC721(ticketAddress).getApproved(tokenId) == address(this),
             "Not approved"
@@ -92,9 +101,8 @@ contract Marketplace is ReentrancyGuard, IERC721Receiver {
             newOwner,
             tokenId
         );
-        (bool success, ) = payable(newOwner).call{
-            value: listedItem.price
-        }("");
+        (bool success, ) = payable(newOwner).call{ value: SafeMath.add(listedItem.price, 0) }("");
+
         require(success, "Transfer failed");
         emit TicketTransferred(prevOwner, newOwner, tokenId);
 
@@ -107,24 +115,17 @@ contract Marketplace is ReentrancyGuard, IERC721Receiver {
     ) public isOwner(ticketAddress, tokenId) nonReentrant {
         require(newPrice > 0, "Invalid Price");
         MarketItem memory listing = listings[ticketAddress][tokenId];
-        require(listing.price <= 0, "Already listed");
+        require(listing.price >= 0, "Not listed yet");
         listings[ticketAddress][tokenId].price = newPrice;
+        emit  UpdateItem( listing.seller, ticketAddress, tokenId, newPrice);
     }
 
-    function onERC721Received(
-        address operator,
-        address from,
-        uint256 tokenId,
-        bytes memory data
-    ) public virtual override returns (bytes4) {
-        return this.onERC721Received.selector;
-    }
 
-    function getListing(address ticketAddress, uint256 tokenId)
+    function getListingPrice(address ticketAddress, uint256 tokenId)
         public
         view
-        returns (MarketItem memory)
+        returns (uint256)
     {
-        return listings[ticketAddress][tokenId];
+        return listings[ticketAddress][tokenId].price;
     }
 }

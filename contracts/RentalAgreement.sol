@@ -1,8 +1,12 @@
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
 import "./Profile.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 contract RentalAgreement {
+    using SafeMath for uint256;
+
     struct RentAgreement {
         uint256 rentId;
         address owner;
@@ -75,7 +79,8 @@ contract RentalAgreement {
         require(_startDate < _endDate, "Invalid rent duration");
         require(_startDate >= block.timestamp, "Invalid start duration");
 
-        rentIdCounter++;
+        rentIdCounter = rentIdCounter.add(1); // use SafeMath for incrementing rentIdCounter
+
 
         rentalAgreements[rentIdCounter] = RentAgreement(
             rentIdCounter,
