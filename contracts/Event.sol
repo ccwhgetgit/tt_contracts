@@ -66,7 +66,7 @@ contract Event is ERC721 {
         uint256[] memory _categoryLimits,
         string memory _eventName,
         string memory _eventSymbol
-    ) public payable ERC721(_eventName, _eventSymbol) {
+    ) payable ERC721(_eventName, _eventSymbol) {
         marketplace = Marketplace(_marketplace);
         profile = Profile(_profile);
         require(

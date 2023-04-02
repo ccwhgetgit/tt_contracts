@@ -54,7 +54,7 @@ contract Marketplace is ReentrancyGuard {
     }
 
     // receive address during deployment script
-    constructor(address _profile) public {
+    constructor(address _profile)  {
         profile = Profile(_profile);
     }
 
