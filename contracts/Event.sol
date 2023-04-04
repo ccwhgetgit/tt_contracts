@@ -112,14 +112,15 @@ contract Event is ERC721 {
             false
         );
 
-        _safeMint(msg.sender, newItemId);
-        ticketsPerOwner[msg.sender] += 1;
-        ticketIDs[newItemId] = newTicket;
-        ticketCategories[_category].sold += 1;
+       
          (bool success, ) = payable(organizer).call{
             value:ticketCategories[_category].price
         }("");
         require(success, "Transfer failed");
+         _safeMint(msg.sender, newItemId);
+        ticketsPerOwner[msg.sender] += 1;
+        ticketIDs[newItemId] = newTicket;
+        ticketCategories[_category].sold += 1;
         emit TicketMinted(msg.sender, newItemId);
     }
 
