@@ -27,6 +27,7 @@ contract DAO {
     event Voted(uint256 proposalID, address voter, bool vote);
     event EarnPoints(uint256 proposalID, address voter, uint256 votingPower);
     event UpdatePoints(address user, uint256 points); 
+    event ProposalEnded(address user, bool passed, uint256 totalVote);
 
     modifier onlyOwner() {
         require(msg.sender == owner, "Not authorized");
@@ -76,11 +77,12 @@ contract DAO {
 
         Proposal storage proposal = proposals[proposalID];
         uint256 totalVotes =  proposal.positiveVotes.add(proposal.negativeVotes);
-        require(totalVotes > minimumVotes, "Quorum not reached");
+        require(totalVotes >= minimumVotes, "Quorum not reached");
         if (proposal.positiveVotes > proposal.negativeVotes) {
             proposal.passed = true;
         } else {
             proposal.passed = false;
         }
+        emit ProposalEnded(msg.sender, proposal.passed, totalVotes);
     }
 }

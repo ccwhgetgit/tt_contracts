@@ -58,7 +58,7 @@ contract('DAO', function (accounts) {
     )
   })
 
-  it('Vote pass for Proposal 1', async () => {
+  it('Receive points for votes', async () => {
     let initialPoints = new BigNumber(
       await profileInstance.checkPoints(accounts[2]),
     )
@@ -71,10 +71,15 @@ contract('DAO', function (accounts) {
     await assert(afterPoints.minus(initialPoints).eq(2))
   })
 
-  it('Ensure Proposal can only closed by Owner', async () => {
+  it('Ensure Proposal can only be closed by Owner', async () => {
     await truffleAssert.reverts(
       daoInstance.endProposal(0, { from: accounts[1] }),
       'Not authorized',
     )
   })
+
+  it('Ensure Proposal is closed by Owner', async () => {
+    let e1 = await daoInstance.endProposal(0, { from: accounts[0] });
+    truffleAssert.eventEmitted(e1, 'ProposalEnded');}
+  )
 })
