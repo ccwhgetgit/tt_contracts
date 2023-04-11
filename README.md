@@ -7,4 +7,8 @@ Smart Contracts:
 * Auction 
 * Rental Agreements 
 
+Class Diagram
+
+![ClassDiagram](class_diagram.png)
+
 Written in Solidity, unit tests using Truffle 
